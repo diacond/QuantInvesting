@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def get_latest_signal_info(entries_series: pd.Series, exits_series: pd.Series) -> str:
     """
-    개별 자산의 진입/청산 시그널 계열을 분석하여 가장 최근의 포지션 상태를 텍스트로 반환합니다.
+    진입/청산 시그널을 비교해 가장 최근의 포지션 상태를 텍스트로 반환한다.
     """
     entry_dates = entries_series[entries_series].index
     exit_dates = exits_series[exits_series].index
@@ -43,7 +43,7 @@ def run_ma_crossover_backtest(
     fees: float = 0.001
 ) -> Tuple[vbt.Portfolio, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    다중 종목 또는 단일 종목의 이동평균선 교차 전략 백테스팅을 실행합니다.
+    단일 또는 다중 종목에 대해 이동평균선 교차 전략 백테스트를 실행한다.
 
     Parameters:
         ticker (Union[str, List[str]]): 콤마로 구분된 문자열 또는 티커 리스트 (예: 'AAPL, MSFT', ['AAPL', 'MSFT'])
