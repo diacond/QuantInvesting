@@ -89,6 +89,7 @@ flowchart LR
 ```
 QuantInvesting/
 ├── app.py            # Streamlit 대시보드 (UI, 두 가지 분석 모드, 차트)
+├── requirements.txt  # 의존성 목록
 └── src/
     ├── backtest.py   # 백테스팅 엔진 (데이터 수집, 전략 계산, 시뮬레이션)
     └── ai_task.md    # 구현 가이드 문서
@@ -99,8 +100,8 @@ QuantInvesting/
 ## 6. 실행 방법
 
 ```bash
-# 의존성 설치 (vectorbt는 plotly 6과 호환되지 않아 5.x 버전 사용)
-pip install yfinance vectorbt "plotly<6" pandas numpy streamlit
+# 의존성 설치 (vectorbt는 plotly 6과 호환되지 않아 plotly 5.x로 고정)
+pip install -r requirements.txt
 
 # 대시보드 실행
 streamlit run app.py
@@ -126,8 +127,9 @@ python -m src.backtest
 ### 🔧 발견한 문제와 개선 과제
 
 > 아래 1~3번은 합성 가격 데이터로 엔진을 실행해 직접 확인했습니다 (yfinance 1.7.0, vectorbt 1.1.0 기준).
+> ✅ 표시한 항목은 수정을 완료했습니다.
 
-**1. 최신 yfinance에서 단일 종목 분석이 실패합니다** `버그`
+**1. 최신 yfinance에서 단일 종목 분석이 실패합니다** `버그` ✅ 해결
 
 yfinance 0.2.48부터는 종목이 하나여도 `(Price, Ticker)` 두 단계 컬럼으로 데이터를 돌려줍니다. 그래서 `df['Close']`가 Series가 아닌 DataFrame이 되고, `.to_frame()` 호출에서 오류가 납니다.
 
@@ -135,14 +137,16 @@ yfinance 0.2.48부터는 종목이 하나여도 `(Price, Ticker)` 두 단계 컬
 RuntimeError: 데이터 수집에 실패했습니다: 'DataFrame' object has no attribute 'to_frame'
 ```
 
-다중 종목 분기와 같은 방식으로 처리하면 해결됩니다.
+`Close`가 DataFrame이면 첫 번째 열을 티커 이름으로 바꿔 쓰고, Series면 기존처럼 변환하도록 고쳤습니다. 예전 형식과 새 형식 모두에서 동작하는 것을 확인했습니다.
 
 ```python
 close = df['Close']
-close_df = close if isinstance(close, pd.DataFrame) else close.to_frame(name=tickers[0])
+if isinstance(close, pd.DataFrame):
+    close_df = close.iloc[:, [0]].copy()
+    close_df.columns = [tickers[0]]
+else:
+    close_df = close.to_frame(name=tickers[0])
 ```
-
-또는 `yf.download(..., multi_level_index=False)`를 쓰거나, `requirements.txt`에 검증한 버전을 고정하는 방법도 있습니다.
 
 **2. 시그널이 나온 날의 종가로 바로 체결됩니다** `백테스트 편향`
 
@@ -153,9 +157,9 @@ entries = entries.shift(1, fill_value=False)
 exits = exits.shift(1, fill_value=False)
 ```
 
-**3. 날짜 형식 오류 메시지가 의도대로 나오지 않습니다** `사소함`
+**3. 날짜 형식 오류 메시지가 의도대로 나오지 않습니다** `사소함` ✅ 해결
 
-`strptime`의 오류 문구에는 "strptime"이라는 단어가 없어서, 준비한 한국어 안내 대신 원래 영문 오류(`time data '...' does not match format`)가 그대로 나갑니다. 날짜 파싱만 따로 `try`로 감싸면 해결됩니다.
+`strptime`의 오류 문구에는 "strptime"이라는 단어가 없어서, 준비한 한국어 안내 대신 원래 영문 오류(`time data '...' does not match format`)가 그대로 나갔습니다. 날짜 파싱만 따로 `try`로 감싸 한국어 안내가 나오도록 고쳤습니다.
 
 **4. 스크리너 정렬을 바꾸면 결과가 사라집니다** `UX`
 
@@ -165,11 +169,11 @@ Streamlit은 위젯 값이 바뀔 때마다 스크립트 전체를 다시 실행
 
 `@st.cache_data`로 가격 데이터 다운로드를 캐싱하면 파라미터만 바꿔 실행할 때 훨씬 빨라집니다.
 
-**6. 저장소 정리** `유지보수`
+**6. 저장소 정리** `유지보수` ✅ 일부 해결
 
-- `requirements.txt`가 없어 설치할 라이브러리와 버전을 알기 어렵습니다.
-- 실행 결과물인 `__pycache__/`와 도구 세션 기록인 `.gjc/`가 커밋되어 있습니다. `.gitignore`에 추가하고 저장소에서 제거하는 것을 권장합니다.
-- 자동화된 테스트가 없습니다. yfinance 호출을 가짜 데이터로 바꿔 엔진을 검증하는 `pytest` 테스트를 추가하면 1번 같은 문제를 미리 잡을 수 있습니다.
+- ✅ `requirements.txt`를 추가했습니다.
+- ✅ 실행 결과물인 `__pycache__/`와 도구 세션 기록인 `.gjc/`를 저장소에서 제거하고 `.gitignore`에 추가했습니다.
+- 자동화된 테스트가 아직 없습니다. yfinance 호출을 가짜 데이터로 바꿔 엔진을 검증하는 `pytest` 테스트를 추가하면 1번 같은 문제를 미리 잡을 수 있습니다.
 
 ### 📌 전략 자체의 한계
 
@@ -182,9 +186,11 @@ Streamlit은 위젯 값이 바뀔 때마다 스크립트 전체를 다시 실행
 
 ## 8. 향후 계획
 
-- [ ] 단일 종목 yfinance 호환성 버그 수정
+- [x] 단일 종목 yfinance 호환성 버그 수정
+- [x] 날짜 형식 오류 안내 수정
 - [ ] 시그널 다음 날 체결로 변경해 편향 제거
 - [ ] Buy & Hold 대비 성과 비교
 - [ ] 파라미터 조합 비교(히트맵) 기능
 - [ ] 결과 상태 유지, 데이터 캐싱
-- [ ] `requirements.txt`, `.gitignore`, 테스트 추가
+- [x] `requirements.txt`, `.gitignore` 추가
+- [ ] 엔진 테스트(pytest) 추가
