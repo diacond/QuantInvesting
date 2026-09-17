@@ -4,13 +4,7 @@
 
 <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white"/> <img src="https://img.shields.io/badge/vectorbt-1F4068?style=flat-square"/> <img src="https://img.shields.io/badge/yfinance-6001D2?style=flat-square&logo=yahoo&logoColor=white"/> <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white"/> <img src="https://img.shields.io/badge/Plotly-3F4F75?style=flat-square&logo=plotly&logoColor=white"/> <img src="https://img.shields.io/badge/pandas-150458?style=flat-square&logo=pandas&logoColor=white"/>
 
-<!--
-## 📸 화면
 
-| 다중 종목 스크리너 | 단일 종목 상세 분석 |
-| --- | --- |
-| <img src="docs/screener.png" width="100%"/> | <img src="docs/single.png" width="100%"/> |
--->
 
 <br/>
 
