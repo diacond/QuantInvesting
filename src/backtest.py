@@ -60,8 +60,8 @@ def run_ma_crossover_backtest(
             - close: 종가 데이터 DataFrame
             - fast_ma: 단기 이동평균 DataFrame
             - slow_ma: 장기 이동평균 DataFrame
-            - entries: 매수 시그널 DataFrame
-            - exits: 매도 시그널 DataFrame
+            - entries: 매수 시그널 DataFrame (시그널 발생일 기준, 체결은 다음 거래일)
+            - exits: 매도 시그널 DataFrame (시그널 발생일 기준, 체결은 다음 거래일)
     """
     # 1. 입력 파라미터 파싱 및 검증
     if isinstance(ticker, str):
@@ -173,12 +173,17 @@ def run_ma_crossover_backtest(
         raise RuntimeError(f"전략 계산에 실패했습니다: {e}")
 
     # 5. vectorbt 포트폴리오 시뮬레이션
+    # 시그널은 당일 종가가 확정된 뒤에야 알 수 있으므로, 실제 체결은 다음 거래일 종가로 처리한다.
+    # (당일 종가로 체결하면 미래 정보를 미리 사용하는 look-ahead bias가 생김)
+    exec_entries = entries.shift(1, fill_value=False).astype(bool)
+    exec_exits = exits.shift(1, fill_value=False).astype(bool)
+
     logger.info("vectorbt 포트폴리오 시뮬레이션 실행 중...")
     try:
         portfolio = vbt.Portfolio.from_signals(
             close=close_df,
-            entries=entries,
-            exits=exits,
+            entries=exec_entries,
+            exits=exec_exits,
             init_cash=init_cash,
             fees=fees,
             freq='D',
