@@ -89,12 +89,10 @@ def run_ma_crossover_backtest(
     try:
         start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
         end_dt = datetime.datetime.strptime(end_date, "%Y-%m-%d")
-        if start_dt >= end_dt:
-            raise ValueError("시작일은 종료일보다 이전이어야 합니다.")
-    except ValueError as e:
-        if "strptime" in str(e):
-            raise ValueError(f"날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식이어야 합니다. 입력값: start={start_date}, end={end_date}")
-        raise e
+    except ValueError:
+        raise ValueError(f"날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식이어야 합니다. 입력값: start={start_date}, end={end_date}")
+    if start_dt >= end_dt:
+        raise ValueError("시작일은 종료일보다 이전이어야 합니다.")
 
     # 2. 데이터 다운로드 실행
     logger.info(f"yfinance 데이터 다운로드 중 (대상: {tickers}) | 기간: {start_date} ~ {end_date}")
@@ -105,7 +103,13 @@ def run_ma_crossover_backtest(
             if df.empty:
                 raise ValueError(f"'{tickers[0]}' 종목의 데이터를 다운로드할 수 없습니다.")
             # 1개 종목인 경우 DataFrame의 컬럼명을 티커로 지정하여 일관성 유지
-            close_df = df['Close'].to_frame(name=tickers[0])
+            # (yfinance 0.2.48+는 단일 종목도 (Price, Ticker) MultiIndex 컬럼을 반환함)
+            close = df['Close']
+            if isinstance(close, pd.DataFrame):
+                close_df = close.iloc[:, [0]].copy()
+                close_df.columns = [tickers[0]]
+            else:
+                close_df = close.to_frame(name=tickers[0])
         else:
             df = yf.download(tickers, start=start_date, end=end_date, progress=False)
             if df.empty:
