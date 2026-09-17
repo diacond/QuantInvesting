@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 커스텀 CSS 주입을 통한 프리미엄 디자인 구현
+# 커스텀 CSS (KPI 카드, 헤더 스타일)
 st.markdown("""
     <style>
     /* 메인 컨테이너 패딩 조절 */
