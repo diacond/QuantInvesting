@@ -1,0 +1,6 @@
+yfinance>=0.2.48
+vectorbt>=0.26
+plotly<6
+pandas
+numpy
+streamlit
