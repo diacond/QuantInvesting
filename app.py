@@ -82,7 +82,7 @@ st.markdown("""
 st.markdown("""
     <div class="gradient-header">
         <h1>QUANTMIND Backtest & Screener</h1>
-        <p>이동평균 교차 전략 백테스팅 및 실시간 종목 스크리닝과 순위 산출을 지원합니다.</p>
+        <p>이동평균 교차 전략 백테스팅과 다중 종목 성과 비교·순위 산출을 지원합니다.</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -118,7 +118,7 @@ else:
 # 날짜 설정
 col_date1, col_date2 = st.sidebar.columns(2)
 start_date = col_date1.date_input("시작일", datetime.date(2022, 1, 1))
-end_date = col_date2.date_input("종료일", datetime.date(2026, 1, 1))
+end_date = col_date2.date_input("종료일", datetime.date.today())
 
 # 이동평균 파라미터
 fast_window = st.sidebar.slider("⏱️ 단기 이동평균선 (Fast MA)", min_value=2, max_value=100, value=10)
